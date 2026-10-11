@@ -1,1 +1,52 @@
-{}
+{
+  "knowledge_base_documents": [
+    {
+      "topic": "ticket-priority-classification-rules",
+      "content": "Support tickets are classified into low, medium, high, and urgent priority bands based on customer impact and safety implications. Routine billing inquiries default to low priority, whereas active ride safety hazards or technical account lockouts are automatically escalated to urgent. Automated triage runs upon ingestion to assign the correct initial priority level."
+    },
+    {
+      "topic": "sla-by-severity-policy",
+      "content": "Service Level Agreements are strictly enforced according to ticket severity tiers. Urgent safety and account lockout tickets mandate an initial response within 15 minutes and resolution within 2 hours. Standard billing and technical support issues carry a 24-hour resolution SLA to maintain customer trust."
+    },
+    {
+      "topic": "escalation-matrix",
+      "content": "Tickets that exceed threshold durations or involve repeated unresolved complaints trigger an automated escalation to Tier 2 supervisors. The escalation matrix defines clear ownership handoffs between front-line support agents, specialized safety teams, and operations managers."
+    },
+    {
+      "topic": "refund-compensation-policy",
+      "content": "Refunds and service credits are issued for verified ride cancellations caused by driver no-shows or verified technical payment errors. Compensation amounts are capped based on trip fare values and require valid transaction identifiers recorded in the system."
+    },
+    {
+      "topic": "customer-communication-channel-policy",
+      "content": "Official support communications must be conducted exclusively through authorized in-app chat channels or registered email addresses. Agents are strictly prohibited from sharing personal contact numbers or resolving sensitive disputes over unverified external messaging platforms."
+    },
+    {
+      "topic": "business-hours-holiday-support-policy",
+      "content": "Customer support operations function 24 hours a day, 365 days a year across all regional hubs. Automated RAG retrieval and bot triage handle high-volume off-hour queries, while specialized live escalation teams remain staffed around the clock for urgent incidents."
+    },
+    {
+      "topic": "repeat-complaint-handling-policy",
+      "content": "Any customer ticket referencing a previously closed issue within a 14-day window is flagged as a repeat complaint. These tickets bypass standard tier-1 queues and route directly to senior resolution specialists for comprehensive root-cause review."
+    },
+    {
+      "topic": "service-credit-policy",
+      "content": "Goodwill service credits may be issued to riders experiencing severe service disruptions or prolonged delays. Credits are non-transferable, automatically applied to the user's wallet, and bounded by monthly supervisory approval caps."
+    },
+    {
+      "topic": "feedback-collection-process",
+      "content": "Upon ticket resolution, an automated CSAT survey is dispatched to the user via the mobile application. Feedback scores and qualitative comments are logged to continuously evaluate support agent performance and knowledge base accuracy."
+    },
+    {
+      "topic": "vip-customer-handling-policy",
+      "content": "Verified VIP riders and high-volume corporate accounts receive priority routing and dedicated concierge support. VIP tickets carry expedited SLAs and are handled exclusively by senior support personnel."
+    },
+    {
+      "topic": "outage-communication-protocol",
+      "content": "During widespread regional service outages or server disruptions, automated broadcast notices are dispatched to active users. Support agents utilize standardized outage templates to ensure consistent messaging while engineering teams resolve the underlying incident."
+    },
+    {
+      "topic": "data-retention-policy-for-tickets",
+      "content": "All customer support tickets, chat transcripts, and resolution logs are securely retained for a mandatory compliance period of 3 years. Following this window, identifying personal data is automatically scrubbed while anonymized operational metrics are preserved for analytics."
+    }
+  ]
+}
