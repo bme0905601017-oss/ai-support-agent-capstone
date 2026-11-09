@@ -1,52 +1,59 @@
-{
-  "knowledge_base_documents": [
-    {
-      "topic": "ticket-priority-classification-rules",
-      "content": "Support tickets are classified into low, medium, high, and urgent priority bands based on customer impact and safety implications. Routine billing inquiries default to low priority, whereas active ride safety hazards or technical account lockouts are automatically escalated to urgent. Automated triage runs upon ingestion to assign the correct initial priority level."
-    },
-    {
-      "topic": "sla-by-severity-policy",
-      "content": "Service Level Agreements are strictly enforced according to ticket severity tiers. Urgent safety and account lockout tickets mandate an initial response within 15 minutes and resolution within 2 hours. Standard billing and technical support issues carry a 24-hour resolution SLA to maintain customer trust."
-    },
-    {
-      "topic": "escalation-matrix",
-      "content": "Tickets that exceed threshold durations or involve repeated unresolved complaints trigger an automated escalation to Tier 2 supervisors. The escalation matrix defines clear ownership handoffs between front-line support agents, specialized safety teams, and operations managers."
-    },
-    {
-      "topic": "refund-compensation-policy",
-      "content": "Refunds and service credits are issued for verified ride cancellations caused by driver no-shows or verified technical payment errors. Compensation amounts are capped based on trip fare values and require valid transaction identifiers recorded in the system."
-    },
-    {
-      "topic": "customer-communication-channel-policy",
-      "content": "Official support communications must be conducted exclusively through authorized in-app chat channels or registered email addresses. Agents are strictly prohibited from sharing personal contact numbers or resolving sensitive disputes over unverified external messaging platforms."
-    },
-    {
-      "topic": "business-hours-holiday-support-policy",
-      "content": "Customer support operations function 24 hours a day, 365 days a year across all regional hubs. Automated RAG retrieval and bot triage handle high-volume off-hour queries, while specialized live escalation teams remain staffed around the clock for urgent incidents."
-    },
-    {
-      "topic": "repeat-complaint-handling-policy",
-      "content": "Any customer ticket referencing a previously closed issue within a 14-day window is flagged as a repeat complaint. These tickets bypass standard tier-1 queues and route directly to senior resolution specialists for comprehensive root-cause review."
-    },
-    {
-      "topic": "service-credit-policy",
-      "content": "Goodwill service credits may be issued to riders experiencing severe service disruptions or prolonged delays. Credits are non-transferable, automatically applied to the user's wallet, and bounded by monthly supervisory approval caps."
-    },
-    {
-      "topic": "feedback-collection-process",
-      "content": "Upon ticket resolution, an automated CSAT survey is dispatched to the user via the mobile application. Feedback scores and qualitative comments are logged to continuously evaluate support agent performance and knowledge base accuracy."
-    },
-    {
-      "topic": "vip-customer-handling-policy",
-      "content": "Verified VIP riders and high-volume corporate accounts receive priority routing and dedicated concierge support. VIP tickets carry expedited SLAs and are handled exclusively by senior support personnel."
-    },
-    {
-      "topic": "outage-communication-protocol",
-      "content": "During widespread regional service outages or server disruptions, automated broadcast notices are dispatched to active users. Support agents utilize standardized outage templates to ensure consistent messaging while engineering teams resolve the underlying incident."
-    },
-    {
-      "topic": "data-retention-policy-for-tickets",
-      "content": "All customer support tickets, chat transcripts, and resolution logs are securely retained for a mandatory compliance period of 3 years. Following this window, identifying personal data is automatically scrubbed while anonymized operational metrics are preserved for analytics."
-    }
-  ]
-}
+import os
+import json
+from crewai import Agent
+from crewai.llms.base_llm import BaseLLM
+from sentence_transformers import SentenceTransformer
+import chromadb
+
+os.environ["CREWAI_DISABLE_TELEMETRY"] = "true"
+os.environ["OTEL_SDK_DISABLED"] = "true"
+
+class MockCrewAILLM(BaseLLM):
+    def __init__(self, model_name="mock-model"):
+        super().__init__()
+        self.model_name = model_name
+
+    def call(self, messages, callbacks=None, **kwargs):
+        prompt = str(messages).lower()
+        if "status" in prompt or "lookup" in prompt:
+            return "Thought: Looking up ticket.\nAction: check_support_ticket_status\nAction Input: {'record_id': 'TICK-1000'}"
+        return "Thought: Querying KB.\nAction: rag_lookup\nAction Input: {'query': 'sla policy'}"
+
+    def supports_stop_words(self) -> bool:
+        return True
+
+# Initialize local RAG core using knowledge_base.json
+model = SentenceTransformer('all-MiniLM-L6-v2')
+chroma_client = chromadb.Client()
+kb_collection = chroma_client.get_or_create_collection(name="kb_collection")
+
+try:
+    with open("data/knowledge_base.json", "r") as f:
+        kb_data = json.load(f).get("knowledge_base_documents", [])
+    for doc in kb_data:
+        kb_collection.upsert(
+            ids=[doc["topic"]],
+            embeddings=[model.encode(doc["content"]).tolist()],
+            documents=[doc["content"]],
+            metadatas=[{"topic": doc["topic"]}]
+        )
+except Exception:
+    pass
+
+def retrieve_knowledge(query: str) -> str:
+    results = kb_collection.query(query_embeddings=[model.encode(query).tolist()], n_results=1)
+    docs = results.get("documents", [[]])[0]
+    distances = results.get("distances", [[0.0]])[0]
+    if not docs or (distances and distances[0] > 0.85):
+        return "I don't know based on the provided Ola support policies."
+    return f"Based on Ola policies: {docs[0]}"
+
+def create_intake_agent() -> Agent:
+    return Agent(
+        role="Retrieval Specialist",
+        goal="Retrieve accurate knowledge base policy documents.",
+        backstory="Expert in searching Ola policy documentation.",
+        tools=[],
+        llm=MockCrewAILLM(),
+        verbose=True
+    )
